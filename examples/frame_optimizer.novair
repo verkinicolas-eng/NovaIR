@@ -1,0 +1,81 @@
+# Frame Rate Optimizer
+# Maintains smooth rendering in games/applications
+
+system FrameOptimizer {
+    # Current state
+    state fps: float              # Frames per second
+    state frame_time: float       # Time per frame (ms)
+    state gpu_usage: float        # GPU utilization %
+    state vram_usage: float       # Video memory %
+    state render_quality: int = 3 # Quality level (1-5)
+    state vsync_enabled: bool = true
+
+    # Hard constraints
+    constraint fps_minimum: fps >= 30 @critical
+    constraint gpu_thermal: gpu_usage <= 95 @critical
+    constraint vram_limit: vram_usage <= 90 @critical
+    constraint frame_budget: frame_time <= 33.3 @warning  # 30fps budget
+
+    # Optimization objectives
+    objective smooth_framerate {
+        metric: jitter(fps)
+        target: <= 2.0
+        priority: 10
+    }
+
+    objective high_fps {
+        metric: fps
+        target: >= 60
+        priority: 8
+    }
+
+    objective visual_quality {
+        metric: render_quality
+        target: maximize
+        priority: 6
+    }
+
+    objective gpu_headroom {
+        metric: gpu_usage
+        target: <= 80
+        priority: 4
+    }
+
+    # Available actions
+    action increase_quality() {
+        precondition: render_quality < 5
+        effect: render_quality += 1
+        effect: gpu_usage += 15
+        effect: fps -= 10
+        cost: 0
+    }
+
+    action decrease_quality() {
+        precondition: render_quality > 1
+        effect: render_quality -= 1
+        effect: gpu_usage -= 12
+        effect: fps += 8
+        cost: 0.5  # Slight penalty for reducing quality
+    }
+
+    action toggle_vsync(enabled: bool) {
+        effect: vsync_enabled = enabled
+        effect: fps = enabled ? 60 : fps * 1.2
+        effect: jitter(fps) = enabled ? 0.5 : jitter(fps) * 2
+        cost: 0
+    }
+
+    action flush_vram() {
+        effect: vram_usage -= 20
+        effect: frame_time += 5  # Brief stutter
+        cost: 1.0
+    }
+
+    action dynamic_resolution(scale: float) {
+        precondition: scale >= 0.5 and scale <= 1.0
+        effect: gpu_usage *= scale * scale  # Quadratic scaling
+        effect: fps += (1 - scale) * 30
+        effect: render_quality -= (1 - scale) * 2
+        cost: (1 - scale) * 2.0
+    }
+}

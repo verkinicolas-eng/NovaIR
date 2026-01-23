@@ -1,0 +1,78 @@
+# Load Balancer
+# Distributes work across multiple processing lanes
+
+system LoadBalancer {
+    # System state
+    state cpu_usage: float       # Overall CPU percentage
+    state memory_usage: float    # RAM percentage
+    state queue_depth: int       # Pending requests
+    state active_lanes: int = 4  # Processing lanes in use
+    state latency_p95: float     # 95th percentile latency (ms)
+
+    # Hard constraints
+    constraint cpu_max: cpu_usage <= 85 @critical
+    constraint memory_max: memory_usage <= 80 @critical
+    constraint queue_overflow: queue_depth <= 10000 @critical
+    constraint latency_sla: latency_p95 <= 100 @warning
+
+    # Optimization objectives
+    objective throughput {
+        metric: requests_per_second
+        target: maximize
+        priority: 10
+    }
+
+    objective low_latency {
+        metric: latency_p95
+        target: <= 50
+        priority: 9
+    }
+
+    objective resource_efficient {
+        metric: cpu_usage
+        target: <= 60
+        priority: 4
+    }
+
+    objective queue_empty {
+        metric: queue_depth
+        target: <= 100
+        priority: 6
+    }
+
+    # Available actions
+    action scale_up(lanes: int) {
+        precondition: active_lanes + lanes <= 8
+        effect: active_lanes += lanes
+        effect: cpu_usage += lanes * 10
+        effect: queue_depth -= lanes * 500
+        cost: lanes * 2.0
+    }
+
+    action scale_down(lanes: int) {
+        precondition: active_lanes - lanes >= 1
+        effect: active_lanes -= lanes
+        effect: cpu_usage -= lanes * 8
+        cost: 0.5
+    }
+
+    action throttle(lane: string, factor: float) {
+        precondition: factor >= 0.0 and factor <= 1.0
+        effect: cpu_usage -= (1 - factor) * 15
+        effect: latency_p95 += (1 - factor) * 20
+        cost: 1.0
+    }
+
+    action shed_load(percentage: float) {
+        precondition: percentage <= 0.3  # Max 30% shed
+        effect: queue_depth *= (1 - percentage)
+        effect: cpu_usage *= (1 - percentage)
+        cost: percentage * 10  # High cost - losing requests
+    }
+
+    action free_cache() {
+        effect: memory_usage -= 15
+        effect: latency_p95 += 5  # Temporary slowdown
+        cost: 0.5
+    }
+}

@@ -1,0 +1,53 @@
+# Thermostat Controller
+# A simple temperature regulation system
+
+system Thermostat {
+    # Current state readings
+    state temperature: float     # Current temperature in Celsius
+    state target: float = 20.0   # Desired temperature
+    state fan_speed: int = 0     # Fan speed (0-100%)
+
+    # Hard limits the system must respect
+    constraint temp_safe: temperature <= 85 @critical
+    constraint temp_warn: temperature <= 75 @warning
+    constraint fan_limit: fan_speed <= 100 @critical
+
+    # Goals the system should optimize for
+    objective maintain_target {
+        metric: |temperature - target|
+        target: <= 2.0
+        priority: 10
+    }
+
+    objective energy_efficient {
+        metric: fan_speed
+        target: minimize
+        priority: 5
+    }
+
+    objective stability {
+        metric: jitter(temperature)
+        target: <= 1.0
+        priority: 7
+    }
+
+    # Available actions to take
+    action increase_fan(amount: int) {
+        effect: fan_speed += amount
+        effect: temperature -= amount * 0.5  # estimated cooling
+        cost: amount * 0.1
+    }
+
+    action decrease_fan(amount: int) {
+        effect: fan_speed -= amount
+        effect: temperature += amount * 0.3  # estimated warming
+        cost: 0
+    }
+
+    action emergency_cooling() {
+        effect: fan_speed = 100
+        effect: temperature -= 10
+        cost: 5.0
+        requires: temperature > 80
+    }
+}
