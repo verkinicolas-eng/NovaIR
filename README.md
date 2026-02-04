@@ -147,15 +147,16 @@ NovaIR was tested against a traditional if/else regulator across 6 scenarios:
 
 **NovaIR wins 4/6 scenarios** while maintaining comparable performance.
 
-See [docs/COMPARATIF_PHASE4.md](docs/COMPARATIF_PHASE4.md) for detailed results.
+See [docs/BENCHMARK_RESULTS.md](docs/BENCHMARK_RESULTS.md) for detailed results.
 
 ## Documentation
 
-- [Language Specification](docs/LANGAGE_NOVAIR_SPEC.md) — Complete NovaIR syntax
-- [Tutorial](docs/TUTORIEL_COMPLET.md) — Step-by-step guide
+- [Language Specification](docs/SPECIFICATION.md) — Complete NovaIR syntax
+- [Tutorial](docs/TUTORIAL.md) — Step-by-step guide
 - [FAQ](docs/FAQ.md) — Common questions
-- [Benchmark Report](docs/COMPARATIF_PHASE4.md) — Proof of concept results
-- [Grammar](docs/GRAMMAIRE_NOVAIR.md) — Formal EBNF grammar
+- [Benchmark Report](docs/BENCHMARK_RESULTS.md) — Proof of concept results
+- [Grammar](docs/GRAMMAR.md) — Formal EBNF grammar
+- [Manifesto](docs/MANIFESTO.md) — Philosophy behind NovaIR
 
 ## Project Status
 

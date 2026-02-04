@@ -1,53 +1,45 @@
 # Thermostat Controller
 # A simple temperature regulation system
 
-system Thermostat {
-    # Current state readings
-    state temperature: float     # Current temperature in Celsius
-    state target: float = 20.0   # Desired temperature
-    state fan_speed: int = 0     # Fan speed (0-100%)
+system Thermostat @version("1.0")
 
-    # Hard limits the system must respect
-    constraint temp_safe: temperature <= 85 @critical
-    constraint temp_warn: temperature <= 75 @warning
-    constraint fan_limit: fan_speed <= 100 @critical
+state:
+  temperature <- sensors.cpu.temp
+  target <- config.target_temp
+  fan_speed <- actuators.fan.speed
 
-    # Goals the system should optimize for
-    objective maintain_target {
-        metric: |temperature - target|
-        target: <= 2.0
-        priority: 10
-    }
+constraints:
+  temp_safe : temperature <= 85 @critical
+  temp_warn : temperature <= 75 @warning
+  fan_limit : fan_speed <= 100 @critical
 
-    objective energy_efficient {
-        metric: fan_speed
-        target: minimize
-        priority: 5
-    }
+objectives:
+  maintain_target : temperature -> target(20) @priority(10)
+  energy_efficient : fan_speed -> min @priority(5)
+  stability : temperature -> target(20) @priority(7)
 
-    objective stability {
-        metric: jitter(temperature)
-        target: <= 1.0
-        priority: 7
-    }
+actions:
+  increase_fan:
+    parameters: [amount: 1..20]
+    effects:
+      fan_speed: +10 to +100
+      temperature: -5 to -10
+    cost: low
 
-    # Available actions to take
-    action increase_fan(amount: int) {
-        effect: fan_speed += amount
-        effect: temperature -= amount * 0.5  # estimated cooling
-        cost: amount * 0.1
-    }
+  decrease_fan:
+    parameters: [amount: 1..20]
+    effects:
+      fan_speed: -10 to -100
+      temperature: +3 to +5
+    cost: low
 
-    action decrease_fan(amount: int) {
-        effect: fan_speed -= amount
-        effect: temperature += amount * 0.3  # estimated warming
-        cost: 0
-    }
+  emergency_cooling:
+    effects:
+      fan_speed: +100
+      temperature: -10
+    cost: high
 
-    action emergency_cooling() {
-        effect: fan_speed = 100
-        effect: temperature -= 10
-        cost: 5.0
-        requires: temperature > 80
-    }
-}
+tick:
+  interval: 100 ms
+  action_threshold: 0.5
+  mode: continuous
