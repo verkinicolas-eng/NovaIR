@@ -149,11 +149,35 @@ NovaIR was tested against a traditional if/else regulator across 6 scenarios:
 
 See [docs/BENCHMARK_RESULTS.md](docs/BENCHMARK_RESULTS.md) for detailed results.
 
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/verkinicolas-eng/NovaIR.git
+cd NovaIR
+
+# Run the demo
+python -m src.demo
+
+# Parse a NovaIR file
+python -c "from src.parser import parse_file; print(parse_file('examples/thermostat.novair'))"
+```
+
+## Components
+
+| Component | Status | Description |
+|-----------|--------|-------------|
+| **Parser** | Done | Lexer + Parser + AST |
+| **Runtime** | Done | Scoring engine, constraint checker |
+| **Connectors** | Done | System metrics, simulation |
+| **Examples** | Done | Thermostat, Load Balancer, Frame Optimizer |
+
 ## Documentation
 
 - [Language Specification](docs/SPECIFICATION.md) — Complete NovaIR syntax
 - [Tutorial](docs/TUTORIAL.md) — Step-by-step guide
 - [FAQ](docs/FAQ.md) — Common questions
+- [Use Cases](docs/USE_CASES.md) — Industry applications (IoT, Cloud, Gaming, Industry, Healthcare)
 - [Benchmark Report](docs/BENCHMARK_RESULTS.md) — Proof of concept results
 - [Grammar](docs/GRAMMAR.md) — Formal EBNF grammar
 - [Manifesto](docs/MANIFESTO.md) — Philosophy behind NovaIR
